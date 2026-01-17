@@ -23,12 +23,17 @@ class SeenjeemService {
   }
 
   Future<String> addMainCategory(MainCategoryModel category) async {
-    final docRef = await _db.collection('main_categories').add(category.toFirestore());
+    final docRef =
+        await _db.collection('main_categories').add(category.toFirestore());
+    print(docRef);
     return docRef.id;
   }
 
   Future<void> updateMainCategory(String id, MainCategoryModel category) async {
-    await _db.collection('main_categories').doc(id).update(category.toFirestore());
+    await _db
+        .collection('main_categories')
+        .doc(id)
+        .update(category.toFirestore());
   }
 
   Future<void> deleteMainCategory(String id) async {
@@ -43,17 +48,22 @@ class SeenjeemService {
     }
 
     return query.snapshots().map((snapshot) => snapshot.docs
-        .map((doc) => SubCategoryModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
+        .map((doc) => SubCategoryModel.fromFirestore(
+            doc.data() as Map<String, dynamic>, doc.id))
         .toList());
   }
 
   Future<String> addSubCategory(SubCategoryModel category) async {
-    final docRef = await _db.collection('sub_categories').add(category.toFirestore());
+    final docRef =
+        await _db.collection('sub_categories').add(category.toFirestore());
     return docRef.id;
   }
 
   Future<void> updateSubCategory(String id, SubCategoryModel category) async {
-    await _db.collection('sub_categories').doc(id).update(category.toFirestore());
+    await _db
+        .collection('sub_categories')
+        .doc(id)
+        .update(category.toFirestore());
   }
 
   Future<void> deleteSubCategory(String id) async {
@@ -80,7 +90,8 @@ class SeenjeemService {
     }
 
     return query.snapshots().map((snapshot) => snapshot.docs
-        .map((doc) => SeenjeemQuestionModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
+        .map((doc) => SeenjeemQuestionModel.fromFirestore(
+            doc.data() as Map<String, dynamic>, doc.id))
         .toList());
   }
 
@@ -92,10 +103,12 @@ class SeenjeemService {
         .get();
 
     if (exists.docs.isNotEmpty) {
-      throw Exception('A question with ${question.points} points already exists for this sub-category');
+      throw Exception(
+          'A question with ${question.points} points already exists for this sub-category');
     }
 
-    final docRef = await _db.collection('questions').add(question.toFirestore());
+    final docRef =
+        await _db.collection('questions').add(question.toFirestore());
     return docRef.id;
   }
 
@@ -107,7 +120,8 @@ class SeenjeemService {
         .get();
 
     if (exists.docs.isNotEmpty && exists.docs.first.id != id) {
-      throw Exception('A question with ${question.points} points already exists for this sub-category');
+      throw Exception(
+          'A question with ${question.points} points already exists for this sub-category');
     }
 
     await _db.collection('questions').doc(id).update(question.toFirestore());
@@ -117,7 +131,8 @@ class SeenjeemService {
     await _db.collection('questions').doc(id).delete();
   }
 
-  Future<String> uploadMedia(Uint8List fileBytes, String fileName, String folder) async {
+  Future<String> uploadMedia(
+      Uint8List fileBytes, String fileName, String folder) async {
     try {
       final ref = _storage.ref().child('$folder/$fileName');
       final uploadTask = await ref.putData(fileBytes);
@@ -144,25 +159,42 @@ class SeenjeemService {
   }
 
   Stream<List<GameModel>> getGames() {
-    return _db.collection('games').orderBy('created_at', descending: true).snapshots().map((snapshot) => snapshot.docs
-        .map((doc) => GameModel.fromFirestore(doc.data(), doc.id))
-        .toList());
+    return _db
+        .collection('games')
+        .orderBy('created_at', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => GameModel.fromFirestore(doc.data(), doc.id))
+            .toList());
   }
 
   Stream<List<PaymentModel>> getPayments() {
-    return _db.collection('payments').orderBy('created_at', descending: true).snapshots().map((snapshot) => snapshot
-        .docs
-        .map((doc) => PaymentModel.fromFirestore(doc.data(), doc.id))
-        .toList());
+    return _db
+        .collection('payments')
+        .orderBy('created_at', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => PaymentModel.fromFirestore(doc.data(), doc.id))
+            .toList());
   }
 
   Future<Map<String, dynamic>> getDashboardStats() async {
     try {
       final futures = await Future.wait([
-        _db.collection('main_categories').get().timeout(const Duration(seconds: 5)),
-        _db.collection('sub_categories').get().timeout(const Duration(seconds: 5)),
+        _db
+            .collection('main_categories')
+            .get()
+            .timeout(const Duration(seconds: 5)),
+        _db
+            .collection('sub_categories')
+            .get()
+            .timeout(const Duration(seconds: 5)),
         _db.collection('questions').get().timeout(const Duration(seconds: 5)),
-        _db.collection('questions').where('status', isEqualTo: 'active').get().timeout(const Duration(seconds: 5)),
+        _db
+            .collection('questions')
+            .where('status', isEqualTo: 'active')
+            .get()
+            .timeout(const Duration(seconds: 5)),
         _db.collection('users').get().timeout(const Duration(seconds: 5)),
         _db.collection('games').get().timeout(const Duration(seconds: 5)),
       ]);
@@ -189,16 +221,15 @@ class SeenjeemService {
 
   // Future versions for pages that need them
   Future<List<MainCategoryModel>> getMainCategoriesFuture() async {
-    final snapshot = await _db
-        .collection('main_categories')
-        .orderBy('display_order')
-        .get();
+    final snapshot =
+        await _db.collection('main_categories').orderBy('display_order').get();
     return snapshot.docs
         .map((doc) => MainCategoryModel.fromFirestore(doc.data(), doc.id))
         .toList();
   }
 
-  Future<List<SubCategoryModel>> getSubCategoriesFuture({String? mainCategoryId}) async {
+  Future<List<SubCategoryModel>> getSubCategoriesFuture(
+      {String? mainCategoryId}) async {
     Query query = _db.collection('sub_categories').orderBy('display_order');
 
     if (mainCategoryId != null && mainCategoryId.isNotEmpty) {
@@ -207,7 +238,8 @@ class SeenjeemService {
 
     final snapshot = await query.get();
     return snapshot.docs
-        .map((doc) => SubCategoryModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
+        .map((doc) => SubCategoryModel.fromFirestore(
+            doc.data() as Map<String, dynamic>, doc.id))
         .toList();
   }
 
@@ -234,23 +266,27 @@ class SeenjeemService {
 
     final snapshot = await query.get();
     var questions = snapshot.docs
-        .map((doc) => SeenjeemQuestionModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
+        .map((doc) => SeenjeemQuestionModel.fromFirestore(
+            doc.data() as Map<String, dynamic>, doc.id))
         .toList();
 
     // Filter by main category if needed (requires joining with sub_categories)
     if (mainCategoryId != null && mainCategoryId.isNotEmpty) {
-      final subCats = await getSubCategoriesFuture(mainCategoryId: mainCategoryId);
+      final subCats =
+          await getSubCategoriesFuture(mainCategoryId: mainCategoryId);
       final subCatIds = subCats.map((cat) => cat.id).toSet();
-      questions = questions.where((q) => subCatIds.contains(q.subCategoryId)).toList();
+      questions =
+          questions.where((q) => subCatIds.contains(q.subCategoryId)).toList();
     }
 
     // Filter by search query if provided
     if (search != null && search.isNotEmpty) {
       final searchLower = search.toLowerCase();
-      questions = questions.where((q) =>
-          q.questionTextAr.toLowerCase().contains(searchLower) ||
-          q.answerTextAr.toLowerCase().contains(searchLower)
-      ).toList();
+      questions = questions
+          .where((q) =>
+              q.questionTextAr.toLowerCase().contains(searchLower) ||
+              q.answerTextAr.toLowerCase().contains(searchLower))
+          .toList();
     }
 
     return questions;
@@ -272,7 +308,8 @@ class SeenjeemService {
     await addQuestion(question);
   }
 
-  Future<void> updateQuestionFromMap(String id, Map<String, dynamic> data) async {
+  Future<void> updateQuestionFromMap(
+      String id, Map<String, dynamic> data) async {
     final doc = await _db.collection('questions').doc(id).get();
     if (!doc.exists) {
       throw Exception('Question not found');
@@ -281,17 +318,21 @@ class SeenjeemService {
     final existing = SeenjeemQuestionModel.fromFirestore(doc.data()!, doc.id);
     final question = SeenjeemQuestionModel(
       id: id,
-      subCategoryId: data['sub_category_id'] as String? ?? existing.subCategoryId,
-      questionTextAr: data['question_text_ar'] as String? ?? existing.questionTextAr,
+      subCategoryId:
+          data['sub_category_id'] as String? ?? existing.subCategoryId,
+      questionTextAr:
+          data['question_text_ar'] as String? ?? existing.questionTextAr,
       answerTextAr: data['answer_text_ar'] as String? ?? existing.answerTextAr,
-      questionMediaUrl: data['question_media_url'] as String? ?? existing.questionMediaUrl,
-      answerMediaUrl: data['answer_media_url'] as String? ?? existing.answerMediaUrl,
+      questionMediaUrl:
+          data['question_media_url'] as String? ?? existing.questionMediaUrl,
+      answerMediaUrl:
+          data['answer_media_url'] as String? ?? existing.answerMediaUrl,
       points: data['points'] as int? ?? existing.points,
       status: data['status'] as String? ?? existing.status,
       createdAt: existing.createdAt,
       updatedAt: DateTime.now(),
     );
-    
+
     // Check for duplicate points
     final exists = await _db
         .collection('questions')
@@ -300,27 +341,33 @@ class SeenjeemService {
         .get();
 
     if (exists.docs.isNotEmpty && exists.docs.first.id != id) {
-      throw Exception('A question with ${question.points} points already exists for this sub-category');
+      throw Exception(
+          'A question with ${question.points} points already exists for this sub-category');
     }
 
     await _db.collection('questions').doc(id).update(question.toFirestore());
   }
 
   Future<void> createMainCategory(Map<String, dynamic> data) async {
-    final category = MainCategoryModel(
-      id: '',
-      nameAr: data['name_ar'] as String,
-      mediaUrl: data['media_url'] as String?,
-      displayOrder: data['display_order'] as int? ?? 0,
-      isActive: data['is_active'] as bool? ?? true,
-      status: data['status'] as String? ?? 'active',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-    await addMainCategory(category);
+    try {
+      final category = MainCategoryModel(
+        id: '',
+        nameAr: data['name_ar'] as String,
+        mediaUrl: data['media_url'] as String?,
+        displayOrder: data['display_order'] as int? ?? 0,
+        isActive: data['is_active'] as bool? ?? true,
+        status: data['status'] as String? ?? 'active',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      await addMainCategory(category);
+    } catch (e) {
+      print(e);
+    }
   }
 
-  Future<void> updateMainCategoryFromMap(String id, Map<String, dynamic> data) async {
+  Future<void> updateMainCategoryFromMap(
+      String id, Map<String, dynamic> data) async {
     final doc = await _db.collection('main_categories').doc(id).get();
     if (!doc.exists) {
       throw Exception('Main category not found');
@@ -354,7 +401,8 @@ class SeenjeemService {
     await addSubCategory(category);
   }
 
-  Future<void> updateSubCategoryFromMap(String id, Map<String, dynamic> data) async {
+  Future<void> updateSubCategoryFromMap(
+      String id, Map<String, dynamic> data) async {
     final doc = await _db.collection('sub_categories').doc(id).get();
     if (!doc.exists) {
       throw Exception('Sub category not found');
@@ -363,7 +411,8 @@ class SeenjeemService {
     final existing = SubCategoryModel.fromFirestore(doc.data()!, doc.id);
     final category = SubCategoryModel(
       id: id,
-      mainCategoryId: data['main_category_id'] as String? ?? existing.mainCategoryId,
+      mainCategoryId:
+          data['main_category_id'] as String? ?? existing.mainCategoryId,
       nameAr: data['name_ar'] as String? ?? existing.nameAr,
       mediaUrl: data['media_url'] as String? ?? existing.mediaUrl,
       displayOrder: data['display_order'] as int? ?? existing.displayOrder,
